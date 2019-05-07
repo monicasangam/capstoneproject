@@ -11,5 +11,5 @@ Copyright (c) 2019-2030 Matthew Belanger.
 
 Manifest-Version: 1.0
 Created-By: 1.8.0 (Java Corporation)
-Name: Master Capstone Project/QVX Reader Node/
+Name: Master Capstone Project/QVX Writer Node/
 Sealed: true

@@ -7,7 +7,7 @@ third parties from using this software module for Analytiq conforming
 products. This copyright notice must be included in all copies or
 derivative works of this QVX Reader node module.
 
-Copyright (c) 2019 Monica Sangam.
+Copyright (c) 2019-2030 Monica Sangam.
 
 Manifest-Version: 1.0
 Created-By: 1.8.0 (Java Corporation)

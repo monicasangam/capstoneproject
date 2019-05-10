@@ -17,6 +17,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -42,7 +43,9 @@ import static edu.njit.util.Util.toTitleCase;
  * @author 
  */
 public class QvxWriterNodeDialog extends NodeDialogPane {
-		
+	
+    public static final NodeLogger LOGGER = NodeLogger.getLogger(QvxWriterNodeModel.class);
+
 	//settingsPanel and all of its sub-components
 	private final JPanel settingsPanel;
 	
@@ -52,15 +55,14 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	private final TableNamePanel tableNamePanel;
 	
 	private final JPanel overwritePolicyPanel;
-	private final JRadioButton overwritePolicy_abortButton;
-	private final JRadioButton overwritePolicy_overwriteButton;
+	private final JRadioButton overwritePolicyAbortButton;
+	private final JRadioButton overwritePolicyOverwriteButton;
 	
 	private final AdvancedPanel advancedPanel;
 	private final FieldAttrPanel fieldAttributesPanel;
-	//private final LimitRowsPanel limitRowsPanel;
 		
-	private final double SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-	private final double SCREEN_HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+	private static final double SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+	private static final double SCREEN_HEIGHT = Toolkit.getDefaultToolkit().getScreenSize().getHeight();
 	
     protected QvxWriterNodeDialog() {
         super();
@@ -82,16 +84,16 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
         overwritePolicyPanel = new JPanel();
         overwritePolicyPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         overwritePolicyPanel.setBorder(new TitledBorder("If file exists..."));
-        overwritePolicy_abortButton = new JRadioButton();
-        overwritePolicy_abortButton.setText(OverwritePolicy.ABORT.toString());
-        overwritePolicy_overwriteButton = new JRadioButton();
-        overwritePolicy_overwriteButton.setText(OverwritePolicy.OVERWRITE.toString());
-        overwritePolicy_abortButton.setSelected(true);
+        overwritePolicyAbortButton = new JRadioButton();
+        overwritePolicyAbortButton.setText(OverwritePolicy.ABORT.toString());
+        overwritePolicyOverwriteButton = new JRadioButton();
+        overwritePolicyOverwriteButton.setText(OverwritePolicy.OVERWRITE.toString());
+        overwritePolicyAbortButton.setSelected(true);
         ButtonGroup group = new ButtonGroup();
-        group.add(overwritePolicy_abortButton);
-        group.add(overwritePolicy_overwriteButton);
-        overwritePolicyPanel.add(overwritePolicy_abortButton);
-        overwritePolicyPanel.add(overwritePolicy_overwriteButton);
+        group.add(overwritePolicyAbortButton);
+        group.add(overwritePolicyOverwriteButton);
+        overwritePolicyPanel.add(overwritePolicyAbortButton);
+        overwritePolicyPanel.add(overwritePolicyOverwriteButton);
         
         filesHistoryPanel.addChangeListener(new ChangeListener() {
         	@Override
@@ -123,26 +125,26 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 	@Override
 	protected void saveSettingsTo(NodeSettingsWO settings) throws InvalidSettingsException {
 
-		QvxWriterNodeSettings m_settings = new QvxWriterNodeSettings();
+		QvxWriterNodeSettings mSettings = new QvxWriterNodeSettings();
 	
 		//fileName
 		String fileName = filesHistoryPanel.getSelectedFile();
-		m_settings.setFileName(fileName);
+		mSettings.setFileName(fileName);
 		
 		//overwritePolicy
 		OverwritePolicy overwritePolicy = null;
-		if (overwritePolicy_abortButton.isSelected()) {
+		if (overwritePolicyAbortButton.isSelected()) {
 			overwritePolicy = OverwritePolicy.ABORT;
-		}else if (overwritePolicy_overwriteButton.isSelected()) {
+		}else if (overwritePolicyOverwriteButton.isSelected()) {
 			overwritePolicy = OverwritePolicy.OVERWRITE;
 		}
-		m_settings.setOverwritePolicy(overwritePolicy);
+		mSettings.setOverwritePolicy(overwritePolicy);
 		
-		advancedPanel.saveSettingsInto(m_settings);
-		fieldAttributesPanel.saveSettingsInto(m_settings);
-		tableNamePanel.saveSettingsInto(m_settings);
+		advancedPanel.saveSettingsInto(mSettings);
+		fieldAttributesPanel.saveSettingsInto(mSettings);
+		tableNamePanel.saveSettingsInto(mSettings);
 		
-		m_settings.saveSettingsTo(settings);
+		mSettings.saveSettingsTo(settings);
 	}
 	
 	@Override
@@ -159,16 +161,16 @@ public class QvxWriterNodeDialog extends NodeDialogPane {
 			
 			//overwritePolicy
 			if (overwritePolicy.equals(OverwritePolicy.ABORT.toString())){
-				overwritePolicy_abortButton.setSelected(true);
+				overwritePolicyAbortButton.setSelected(true);
 			}else if (overwritePolicy.equals(OverwritePolicy.OVERWRITE.toString())) {
-				overwritePolicy_overwriteButton.setSelected(true);
+				overwritePolicyOverwriteButton.setSelected(true);
 			}
 			
 			advancedPanel.loadValuesIntoPanel(settings);
 			fieldAttributesPanel.loadValuesIntoPanel(settings, specs[0]);
 			tableNamePanel.loadValuesIntoPanel(settings);
 		} catch (InvalidSettingsException e) {
-			e.printStackTrace();
+			LOGGER.warn("Error loading settings");
 		}
 	}
 }

@@ -9,34 +9,36 @@ public class QvxWriterNodeSettings {
 	 /** the settings key which is used to retrieve and 
     store the settings (from the dialog or from a settings file)    
    (package visibility to be usable from the dialog). */
-	static enum Endianness {
+	enum Endianness {
 		
 		BIG_ENDIAN("Big-Endian"),
 		LITTLE_ENDIAN("Little-Endian");
 		
-		public final String name;
+		public final String value;
 		
-		private Endianness(String _name) {
-			name = _name;
+		private Endianness(String theValue) {
+			value = theValue;
 		}
 		
+		@Override
 		public String toString() {
-			return name;
+			return value;
 		}
 	}	
 
-	static enum OverwritePolicy {
+	enum OverwritePolicy {
 		ABORT("Abort"),
 		OVERWRITE("Overwrite");
 		
-		public final String name;
+		public final String value;
 		
-		private OverwritePolicy(String _name) {
-			name = _name;
+		private OverwritePolicy(String theValue) {
+			value = theValue;
 		}
 		
+		@Override
 		public String toString() {
-			return name;
+			return value;
 		}		
 	}
 	

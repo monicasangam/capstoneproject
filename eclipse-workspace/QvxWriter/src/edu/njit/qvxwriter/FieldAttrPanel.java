@@ -26,6 +26,8 @@ import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_SELECTED_N_DECS;
 
 class FieldAttrPanel extends JPanel {
 
+	private static final long serialVersionUID = 1L;
+	
 	private static final Font COLUMN_HEADER_FONT = new Font("Times New Roman", Font.BOLD, 15);
 	private JLabel columnNameHeader;
 	private JLabel fieldAttrHeader;
@@ -66,10 +68,10 @@ class FieldAttrPanel extends JPanel {
 		
 		setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        double COLUMN_NAME_WEIGHT_X = 0.7;
-        double FIELD_ATTR_WEIGHT_X = 0.7;
-        double N_DEC_WEIGHT_X = 0.2;
-        double FILLER_WEIGHT_X = 0.2; //Fill up the remaining space
+        double columnNameWeightX = 0.7;
+        double fieldAttrWeightX = 0.7;
+        double nDecWeightX = 0.2;
+        double fillerWeightX = 0.2; //Fill up the remaining space
 
 		//Clear the panel
 		removeAll();
@@ -85,20 +87,20 @@ class FieldAttrPanel extends JPanel {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.insets = new Insets(10, 30, 0, 0);
 		
-		gbc.weightx = COLUMN_NAME_WEIGHT_X;
+		gbc.weightx = columnNameWeightX;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		add(columnNameHeader, gbc);
 		
-		gbc.weightx = FIELD_ATTR_WEIGHT_X;
+		gbc.weightx = fieldAttrWeightX;
 		gbc.gridx += 1;
 		add(fieldAttrHeader, gbc);
 		
-		gbc.weightx = N_DEC_WEIGHT_X;
+		gbc.weightx = nDecWeightX;
 		gbc.gridx += 1;
 		add(nDecHeader, gbc);
 		
-		gbc.weightx = FILLER_WEIGHT_X;
+		gbc.weightx = fillerWeightX;
 		gbc.gridx += 1;
 		add(new JPanel(), gbc);
 		
@@ -121,7 +123,7 @@ class FieldAttrPanel extends JPanel {
 			DataColumnSpec columnSpec = spec.getColumnSpec(i);
 			String columnName = columnSpec.getName();
 			columnNameFields[i] = new JLabel(columnName);
-			attributeSelects[i] = new JComboBox<String>(getAllowedAttrTypes(columnSpec));
+			attributeSelects[i] = new JComboBox<>(getAllowedAttrTypes(columnSpec));
 			
 			//If there have been no changes to input table since last QvxWriter configuration
 			if (settingsColumnNames != null && Arrays.equals(inColumnNames, settingsColumnNames)) {
@@ -132,21 +134,21 @@ class FieldAttrPanel extends JPanel {
 				nDecSpinners[i] = new JSpinner(new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1));
 			}
 		
-			gbc.weightx = COLUMN_NAME_WEIGHT_X;
+			gbc.weightx = columnNameWeightX;
 			gbc.gridy += 1;
 			gbc.gridx = 0;
 			add(columnNameFields[i], gbc);
 			
-			gbc.weightx = FIELD_ATTR_WEIGHT_X;
+			gbc.weightx = fieldAttrWeightX;
 			gbc.gridx += 1;
 			add(attributeSelects[i], gbc);
 			
-			gbc.weightx = N_DEC_WEIGHT_X;
+			gbc.weightx = nDecWeightX;
 			gbc.gridx += 1;
 			nDecSpinners[i].setPreferredSize(new Dimension(45, 30));
 			add(nDecSpinners[i], gbc);
 			
-			gbc.weightx = FILLER_WEIGHT_X; //Fill the remaining space
+			gbc.weightx = fillerWeightX; //Fill the remaining space
 			gbc.gridx += 1;
 			add(new JPanel(), gbc);
 		}		
@@ -210,7 +212,7 @@ class FieldAttrPanel extends JPanel {
 					FieldAttrType.UNKNOWN.value()
 			};
 		}else { //Unknown type
-			return null;
+			return new String[] {};
 		}
 		//
 	}

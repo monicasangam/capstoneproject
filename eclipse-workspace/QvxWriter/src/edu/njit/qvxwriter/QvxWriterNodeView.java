@@ -36,7 +36,8 @@ public class QvxWriterNodeView extends NodeView<QvxWriterNodeModel> {
      */
     @Override
     protected void onClose() {
-    
+    	
+    	// No additional action is necessary
     }
 
     /**
@@ -44,7 +45,8 @@ public class QvxWriterNodeView extends NodeView<QvxWriterNodeModel> {
      */
     @Override
     protected void onOpen() {
-
+    	
+    	// No additional action is necessary
     }
 
 }

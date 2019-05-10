@@ -14,6 +14,7 @@ import edu.njit.qvx.QvxTableHeader;
 
 
 public class QvxFileReaderNodeSettings extends TokenizerSettings {
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(QvxFileReaderNodeSettings.class);
 
     private QVXReader qvxReader = null;
@@ -31,6 +32,7 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
 
 
     public QvxFileReaderNodeSettings() throws MalformedURLException {
+    	
     }
 
     public QvxFileReaderNodeSettings(final QvxFileReaderNodeSettings clonee) {
@@ -40,55 +42,49 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
         uniquifyRowIDs = clonee.uniquifyRowIDs;
     }
 
-    public void init() throws MalformedURLException {
-        dataFileLocation = null;
-        rowHeaderPrefix = null;
-        uniquifyRowIDs = false;
-    }
-
-
     public QvxFileReaderNodeSettings(final NodeSettingsRO cfg)
             throws InvalidSettingsException, MalformedURLException {
 
         super(cfg);
         if (cfg != null) {
             try {
-                URL dataFileLocation = new URL(cfg.getString(CFGKEY_DATAURL));
-                setDataFileLocationAndUpdateTableName(dataFileLocation);
+                dataFileLocation = new URL(cfg.getString(CFGKEY_DATAURL));
             } catch (MalformedURLException mfue) {
-                throw new IllegalArgumentException(
-                        "Cannot create URL of data file" + " from '"
-                                + cfg.getString(CFGKEY_DATAURL)
-                                + "' in filereader config", mfue);
+            	String errorMessage = "Cannot create URL of data file" + " from '"
+                        + cfg.getString(CFGKEY_DATAURL)
+                        + "' in filereader config";
+                LOGGER.error(errorMessage);
+                throw new IllegalArgumentException(errorMessage, mfue);
             } catch (InvalidSettingsException ice) {
-                throw new InvalidSettingsException("Illegal config object for "
+            	String errorMessage = "Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_DATAURL
-                        + "' missing!", ice);
+                        + "' missing!";
+            	LOGGER.error(errorMessage);
+                throw new InvalidSettingsException(errorMessage, ice);
             }
-
         }
     }
-
 
     @Override
     public void saveToConfiguration(final NodeSettingsWO cfg) {
         if (cfg == null) {
-            throw new NullPointerException("Can't save 'file "
-                    + "reader settings' to null config!");
+        	String errorMessage = "Can't save 'file reader settings' to null config!";
+        	LOGGER.error(errorMessage);
+            throw new NullPointerException(errorMessage);
         }
 
         if (dataFileLocation != null) {
             cfg.addString(CFGKEY_DATAURL, dataFileLocation.toString());
         }
-
+        
         super.saveToConfiguration(cfg);
-
     }
 
 
     public void setDataFileLocationAndUpdateTableName(
             final URL dataFileLocation) {
-        this.dataFileLocation = dataFileLocation;
+    	
+    	this.dataFileLocation = dataFileLocation;
     }
 
 
@@ -111,6 +107,4 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
 	public QvxTableHeader getQvxTableHeader() {
 		return this.qvxTableHeader;
 	}
-
-
 }

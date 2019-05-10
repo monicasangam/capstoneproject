@@ -17,7 +17,7 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/"
+            category-path="/community"
             factory-class="edu.njit.qvxreader.QvxReaderNodeFactory"
             id="edu.njit.qvxreader.QvxReaderNodeFactory"/>
    </extension>

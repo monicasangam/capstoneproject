@@ -23,11 +23,11 @@ import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_USE_DEFAULT_TABLE_
 
 class TableNamePanel extends JPanel {
 
+	private static final Color UNEDITABLE_COLOR = new Color(200, 200, 200);
+
 	private final JTextField tableNameField;
 	private final JRadioButton defaultButton;
-	private final JRadioButton customButton;
-	
-	private final Color UNEDITABLE_COLOR = new Color(200, 200, 200);
+	private final JRadioButton customButton;	
 	
 	private String defaultName = "";
 	private String customName = "";

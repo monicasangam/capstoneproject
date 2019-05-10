@@ -14,7 +14,7 @@
    -->
    
 	<extension point="org.knime.workbench.repository.nodes">
-		<node category-path="/" factory-class="edu.njit.qvxwriter.QvxWriterNodeFactory" id="edu.njit.qvxwriter.QvxWriterNodeFactory"/>
+		<node category-path="/community" factory-class="edu.njit.qvxwriter.QvxWriterNodeFactory" id="edu.njit.qvxwriter.QvxWriterNodeFactory"/>
 	</extension>
    
 </plugin>

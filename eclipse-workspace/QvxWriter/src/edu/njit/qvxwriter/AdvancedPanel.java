@@ -18,6 +18,8 @@ import edu.njit.qvxwriter.QvxWriterNodeSettings.Endianness;
 
 class AdvancedPanel extends JPanel {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final JPanel recordSeparatorPanel;
 	private final JCheckBox recordSeparatorCheckBox;
 	private final JLabel recordSeparatorDescription;
@@ -134,23 +136,23 @@ class AdvancedPanel extends JPanel {
 		boolean isBigEndian = false;
 		try {
 			isBigEndian = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_IS_BIG_ENDIAN);
-		}catch(InvalidSettingsException e) {	
+		}catch(InvalidSettingsException e) {
+			QvxWriterNodeModel.LOGGER.warn("\"Big-Endian\" setting has not been set");
 		}
 		
 		boolean usesRecordSeparator = false;
 		try {
 			usesRecordSeparator = settings.getBoolean(QvxWriterNodeSettings.CFGKEY_USES_RECORD_SEPARATOR);
 		}catch(InvalidSettingsException e) {
+			QvxWriterNodeModel.LOGGER.warn("\"Use Record Separator\" setting has not been set");
 		}
 		
-		//isBigEndian
 		if (isBigEndian) {
 			bigEndianButton.setSelected(true);
 		}else {
 			littleEndianButton.setSelected(true);
 		}
 		
-		//usesRecordSeparator
 		recordSeparatorCheckBox.setSelected(usesRecordSeparator);		
 	}
 }

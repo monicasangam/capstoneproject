@@ -11,6 +11,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -27,7 +28,9 @@ import static edu.njit.qvxwriter.QvxWriterNodeSettings.CFGKEY_OVERWRITE_POLICY;
  */
 public class QvxWriterNodeModel extends NodeModel {
     
-    private QvxWriterNodeSettings m_settings;
+    public static final NodeLogger LOGGER = NodeLogger.getLogger(QvxWriterNodeModel.class);
+
+    private QvxWriterNodeSettings mSettings;
     
     /**
      * Constructor for the node model.
@@ -36,76 +39,59 @@ public class QvxWriterNodeModel extends NodeModel {
     
         // 1 incoming port and 0 outgoing ports
         super(1, 0);
-        m_settings = new QvxWriterNodeSettings();
+        mSettings = new QvxWriterNodeSettings();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws InvalidSettingsException {
     	
-    	if (!m_settings.getFileName().equals("")) {
+    	if (!mSettings.getFileName().equals("")) {
     		/*A non-empty file name also implies that every other value in settings is non-empty
     		(which implies that the writeQvxFile has all the necessary settings configured)*/
     		writeQvxFile(inData[0]);
-    		return null;
+    		return new BufferedDataTable[] {};
     	}else {
-    		throw new InvalidSettingsException("Node has not been configured");
+    		LOGGER.error("No settings available");
+    		return new BufferedDataTable[] {};
     	}
     }
     
     protected void writeQvxFile(final BufferedDataTable table) {
     	
     	QvxWriter qvxWriter = new QvxWriter();
-    	String outFileName = m_settings.getFileName();
-    	qvxWriter.writeQvxFile(table, outFileName, m_settings);
+    	String outFileName = mSettings.getFileName();
+    	qvxWriter.writeQvxFile(table, outFileName, mSettings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void reset() {
-    	
+    	// No additional action needs to be taken on reset
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
-    	if (m_settings.getFileName().equals("")) {
+    	if (mSettings.getFileName().equals("")) {
             throw new InvalidSettingsException("No settings available");
         }
         return new DataTableSpec[]{null};
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     	
-        m_settings.saveSettingsTo(settings);
+        mSettings.saveSettingsTo(settings);
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         
-    	m_settings = new QvxWriterNodeSettings(settings);
+    	mSettings = new QvxWriterNodeSettings(settings);
     }
-
-    /**
-     * {@inheritDoc}
-     */
+    
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -113,24 +99,24 @@ public class QvxWriterNodeModel extends NodeModel {
     	validateFileName(settings);
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-           	
+    	
+    	/* Everything handed to output ports is loaded automatically.
+    	 * No additional action is necessary.
+    	 */
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
     	
+    	/* Everything written to output ports is saved automatically.
+    	 * No additional action is necessary.
+    	 */
     }
     
     protected void validateFileName(NodeSettingsRO settings) throws InvalidSettingsException {
@@ -144,10 +130,8 @@ public class QvxWriterNodeModel extends NodeModel {
     		throw new InvalidSettingsException("The provided file name is a directory");
     	}
     	
-    	if(file.exists()) {
-    		if(overwritePolicy.equals(OverwritePolicy.ABORT.toString())) {
-    			throw new InvalidSettingsException("File already exists");
-    		}
+    	if(file.exists() && overwritePolicy.equals(OverwritePolicy.ABORT.toString())) {
+    		throw new InvalidSettingsException("File already exists");
     	}
     	
     	CheckUtils.checkDestinationFile(fileName, overwriteFile);
@@ -157,4 +141,3 @@ public class QvxWriterNodeModel extends NodeModel {
     	}
     }
 }
-

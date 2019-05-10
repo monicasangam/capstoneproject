@@ -8,37 +8,30 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.knime.core.node.NodeLogger;
+
 public class Util {
 	
-	public static Calendar nullCalendar = Calendar.getInstance(TimeZone.getTimeZone("EDT"));
-	public static SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
-	public static long SECONDS_PER_DAY = 86400;
-	public static long MILLISECONDS_PER_DAY = 86400000;
-	static Date EPOCH;
-	static Date START_DATE;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Util.class);
+    
+	private static final long SECONDS_PER_DAY = 86400;
+	private static final long MILLISECONDS_PER_DAY = 86400000;
+	private static Date epoch;
+	private static Date startDate;
 	static {
-		nullCalendar.set(Calendar.MONTH, 0);
-		nullCalendar.set(Calendar.DAY_OF_MONTH, 1);
-		nullCalendar.set(Calendar.YEAR, 0);
-		nullCalendar.set(Calendar.HOUR_OF_DAY, 0);
-		nullCalendar.set(Calendar.MINUTE, 0);
-		nullCalendar.set(Calendar.SECOND, 0);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
 		dateFormat.setTimeZone(TimeZone.getTimeZone("EDT"));
 		try {
-			EPOCH = dateFormat.parse("1 1 1970");
-			START_DATE = dateFormat.parse("12 30 1899");
+			epoch = dateFormat.parse("1 1 1970");
+			startDate = dateFormat.parse("12 30 1899");
 		}catch(ParseException e) {
-			e.printStackTrace();
+			LOGGER.error("Error reading qvx file; could not parse date");
 		}
 	}
 	
-	public static void checkNotNull(Object obj, String name) {
-    	if (obj != null) {
-    		System.out.println(name + " has a value"); 
-    	}else {
-    		throw new RuntimeException(name + " is null!");
-    	}
-    }
+	private Util() {
+		// Hides the implicit private constructor (squid:S1118)
+	}
 	
 	public static byte[] combineByteArrays(byte[] a, byte[] b) {
 		byte[] returnValue = new byte[a.length + b.length];
@@ -78,7 +71,7 @@ public class Util {
 			String sep = "";
 			for(int i = 0; i < s.length(); i++) {
 				if (dateSeps.contains("" + s.charAt(i))) {
-					sep += s.charAt(i);
+					sep = "" + s.charAt(i);
 					break;
 				}
 			}
@@ -91,7 +84,7 @@ public class Util {
 				month = Integer.parseInt(dateParts[0]) - 1;
 				dayOfMonth = Integer.parseInt(dateParts[1]);
 				year = Integer.parseInt(dateParts[2]);
-			}else if (matchB) {
+			}else { //matchB
 				year = Integer.parseInt(dateParts[0]);
 				month = Integer.parseInt(dateParts[1]) - 1;
 				dayOfMonth = Integer.parseInt(dateParts[2]);
@@ -112,9 +105,9 @@ public class Util {
 		double partialDaysSince = daysSince - fullDaysSince;
 		long remainingSeconds = Math.round(partialDaysSince*SECONDS_PER_DAY);
 		
-		long dateInMilliseconds = (START_DATE.getTime()-EPOCH.getTime()) +
-				(long)(fullDaysSince*MILLISECONDS_PER_DAY) +
-				(long)(remainingSeconds*1000);
+		long dateInMilliseconds = (startDate.getTime()-epoch.getTime()) +
+				(fullDaysSince*MILLISECONDS_PER_DAY) +
+				(remainingSeconds*1000);
 		
 		Date date = new Date(dateInMilliseconds);
 		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EDT"));

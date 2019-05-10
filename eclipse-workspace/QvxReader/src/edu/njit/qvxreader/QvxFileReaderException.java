@@ -5,7 +5,9 @@ import org.knime.core.data.DataRow;
 
 public class QvxFileReaderException extends RuntimeException {
 
-    private final DataRow row;
+	private static final long serialVersionUID = 1L;
+	
+	private final DataRow row;
 
     QvxFileReaderException(final String msg) {
         super(msg);

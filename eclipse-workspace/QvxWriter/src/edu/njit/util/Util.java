@@ -6,31 +6,30 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.knime.core.node.NodeLogger;
+
 public class Util {
 	
-	public static SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
-	public static long MILLISECONDS_PER_DAY = 86400000;
-	public static double SECONDS_PER_DAY = 86400;
-	static Date EPOCH;
-	static Date START_DATE;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Util.class);
+
+	private static final long MILLISECONDS_PER_DAY = 86400000;
+	private static final double SECONDS_PER_DAY = 86400;
+	private static Date epoch;
+	private static Date startDate;
 	static {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM dd yyyy");
 		dateFormat.setTimeZone(TimeZone.getTimeZone("EDT"));
 		try {
-			EPOCH = dateFormat.parse("1 1 1970");
-			START_DATE = dateFormat.parse("12 30 1899");
+			epoch = dateFormat.parse("1 1 1970");
+			startDate = dateFormat.parse("12 30 1899");
 		}catch(ParseException e) {
-			e.printStackTrace();
+			LOGGER.error("Error writing qvx file; could not parse date");
 		}
 	}
 	
-	public static void checkNotNull(Object obj, String name) {
-		
-    	if (obj != null) {
-    		System.out.println(name + " has a value"); 
-    	}else {
-    		throw new RuntimeException(name + " is null!");
-    	}
-    }
+	private Util() {
+		// Hides the implicit private constructor (squid:S1118)
+	}
 	
 	public static byte[] combineByteArrays(byte[] a, byte[] b) {
 		
@@ -57,7 +56,7 @@ public class Util {
 		cal.set(Calendar.YEAR, year);
 		resolveDateOffset(cal);
 				
-		return (cal.getTimeInMillis() + EPOCH.getTime() - START_DATE.getTime())/MILLISECONDS_PER_DAY;
+		return (cal.getTimeInMillis() + epoch.getTime() - startDate.getTime())/(double)MILLISECONDS_PER_DAY;
 	}
 	
 	public static double timeToDaysSince(String time) {

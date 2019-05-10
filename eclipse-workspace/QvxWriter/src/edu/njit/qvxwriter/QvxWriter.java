@@ -20,6 +20,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
 
 import edu.njit.qvx.FieldAttrType;
 import edu.njit.qvx.FieldAttributes;
@@ -47,6 +48,8 @@ import static edu.njit.util.Util.timeToDaysSince;
 
 public class QvxWriter {
 	
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(QvxWriter.class);
+
 	private BufferedDataTable table;
 	private String[] fieldNames;
 	private String[][] data;
@@ -87,7 +90,9 @@ public class QvxWriter {
 		calendar.setTime(new Date());
 		try {
 			tableHeader.setCreateUtcTime(DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar));
-		}catch(DatatypeConfigurationException e) {};
+		}catch(DatatypeConfigurationException e) {
+			LOGGER.warn("Date was not set in the QvxTableHeader");
+		}
 				
     	tableHeader.setTableName(settings.getTableName());
     	tableHeader.setUsesSeparatorByte(settings.getUsesSeparatorByte());
@@ -136,7 +141,9 @@ public class QvxWriter {
 			outputStream.write(NUL); //Zero-byte separator between xml and qvx body
 		}
 		catch(IOException | JAXBException e) {
-			e.printStackTrace();
+			String message = "Error occurred when writing the QvxTableHeader";
+			LOGGER.error("Error occurred when writing the QvxTableHeader");
+			throw new RuntimeException(message);
 		}
 	}
 	
@@ -155,45 +162,25 @@ public class QvxWriter {
 			
 			for(int j = 0; j < data[i].length; j++) {
 				
-				byte[] byteValue = null;
-				
 				//"fieldHeader" is the fieldHeader for the column that is being accessed
 				QvxTableHeader.Fields.QvxFieldHeader fieldHeader = tableHeader.getFields().getQvxFieldHeader().get(j);
-				if (fieldHeader.getNullRepresentation().equals(QVX_NULL_FLAG_SUPPRESS_DATA)) {
-					if (fieldHeader.getType().equals(QVX_QV_DUAL)) {
-						byte qvSpecialFlag = getQvxSpecialFlag(data[i][j]);
-						if (qvSpecialFlag == QVX_QV_SPECIAL_NULL.getValue()) {
-							byteValue = new byte[] {qvSpecialFlag};
-						}else {
-							byteValue = combineByteArrays(new byte[] {qvSpecialFlag},
-								convertToByteValue(fieldHeader, data[i][j]));
-						}
-					}else {
-						byte nullFlag = getNullFlagSuppressDataByte(fieldHeader, data[i][j]);
-						if (nullFlag == 1) {
-							byteValue = new byte[] {nullFlag};
-						}else {
-							byteValue = combineByteArrays(
-								new byte[] {nullFlag}, convertToByteValue(fieldHeader, data[i][j]));
-						}
-					}
-				}else if (fieldHeader.getNullRepresentation().equals(QVX_NULL_NEVER)) {
-					byteValue = convertToByteValue(fieldHeader, data[i][j]);
-				}else {
-					throw new RuntimeException("Unrecognized or unimplemented null representation: "
-						+ fieldHeader.getNullRepresentation());
-				}
+				byte[] byteValue = getByteValueWithFlag(data[i][j], fieldHeader);
 				
 				//Write "byteValue" to buffer
 				int prevBufferIndex = bufferIndex; //Necessary for dealing with buffer overflow
 				bufferIndex = insertInto(buffer, byteValue, bufferIndex);
-				if (bufferIndex == -1) { //If there would have been buffer overflow
-					// Write the entire buffer to the outputStream (excluding the value that could not be entered),
-					// then insert this value at beginning of buffer
+				if (bufferIndex == -1) {
+					/* If there would have been buffer overflow, write the entire buffer to the
+					 * outputStream (excluding the value that could not be entered). Then, insert this
+					 * value at beginning of buffer
+					 */
+					
 					try {
 						outputStream.write(Arrays.copyOfRange(buffer, 0, prevBufferIndex));
 					}catch(IOException e) {
-						e.printStackTrace();
+						String errorMessage = "Error writing to qvx file";
+						LOGGER.error(errorMessage);
+						throw new RuntimeException(errorMessage);
 					}				
 					bufferIndex = insertInto(buffer, byteValue, 0);
 				}
@@ -206,7 +193,46 @@ public class QvxWriter {
 				outputStream.write(FILE_SEPARATOR);
 			}
 			outputStream.close();
-		}catch(IOException e) {};
+		}catch(IOException e) {
+			String errorMessage = "Error writing to qvx file";
+			LOGGER.error(errorMessage);
+			throw new RuntimeException(errorMessage);
+		}
+	}
+	
+	private byte[] getByteValueWithFlag(String data, QvxFieldHeader fieldHeader) {
+		
+		/* Converts data to a byte value. If a null flag is used, return a concatenation of the null
+		 * flag and the byte value. If no null flag is used, return just the byte value.
+		 */
+		
+		if (fieldHeader.getNullRepresentation().equals(QVX_NULL_FLAG_SUPPRESS_DATA)) {
+			if (fieldHeader.getType().equals(QVX_QV_DUAL)) {
+				byte qvSpecialFlag = getQvxSpecialFlag(data);
+				if (qvSpecialFlag == QVX_QV_SPECIAL_NULL.getValue()) {
+					return new byte[] {qvSpecialFlag};
+				}else {
+					return combineByteArrays(new byte[] {qvSpecialFlag},
+						convertToByteValue(fieldHeader, data));
+				}
+			}else {
+				byte nullFlag = getNullFlagSuppressDataByte(fieldHeader, data);
+				if (nullFlag == 1) {
+					return new byte[] {nullFlag};
+				}else {
+					return combineByteArrays(
+						new byte[] {nullFlag}, convertToByteValue(fieldHeader, data));
+				}
+			}
+		}else if (fieldHeader.getNullRepresentation().equals(QVX_NULL_NEVER)) {
+			return convertToByteValue(fieldHeader, data);
+		}else {
+			String errorMessage = "Unrecognized or unimplemented null representation: "
+				+ fieldHeader.getNullRepresentation();
+			LOGGER.error(errorMessage);
+			throw new RuntimeException(errorMessage);
+		}
+		
 	}
 
 	//Helper methods --------------------------------------------------
@@ -244,9 +270,11 @@ public class QvxWriter {
 				byteBuffer.putDouble(dateTimeToDouble(fieldHeader, s));
 				return byteBuffer.array();
 			case QVX_TEXT:
-				return stringToByteArray_zeroTerminated(fieldHeader, s);
+				return stringToByteArrayZeroTerminated(fieldHeader, s);
 			default:
-				return null;
+				String errorMessage = "Unrecognized QvxField Type: " + fieldHeader.getFieldName();
+				LOGGER.error(errorMessage);
+				throw new RuntimeException(errorMessage);
 		}
 	}
 	
@@ -321,7 +349,9 @@ public class QvxWriter {
 				daysSince += timeToDaysSince(timePart);
 			return daysSince;
 		default:
-			throw new RuntimeException("Unknown FieldAttrType: " + fieldAttrType);
+			String errorMessage = "Error writing to qvx file: Unknown FieldAttrType: " + fieldAttrType;
+			LOGGER.error(errorMessage);
+			throw new RuntimeException(errorMessage);
 		}		
 	}
 	
@@ -336,13 +366,11 @@ public class QvxWriter {
 	
 	private byte getNullFlagSuppressDataByte(QvxFieldHeader fieldHeader, String s) {
 		
-		byte nullFlag = (byte)0;
-		if (!fieldHeader.getType().equals(QvxFieldType.QVX_TEXT)) {
-			if (s.toString().equals("")) {
-				nullFlag = (byte)1;
-			}
+		if (!fieldHeader.getType().equals(QvxFieldType.QVX_TEXT) && s.equals("")) {
+			return (byte)1;
+		}else{
+			return (byte)0;
 		}
-		return nullFlag;
 	}
 	
 	private byte getQvxSpecialFlag(String s) { // Assume QVX_IEEE_REAL is used
@@ -416,13 +444,13 @@ public class QvxWriter {
 		String type = columnSpec.getType().getName();
 		if (type.equals("Number (integer)")) {
 			int lowerBound;
-			int upperBound;
 			
 			try {
 				lowerBound = Integer.parseInt(columnSpec.getDomain().getLowerBound().toString());
-				upperBound = Integer.parseInt(columnSpec.getDomain().getUpperBound().toString());
+				Integer.parseInt(columnSpec.getDomain().getUpperBound().toString());
 			}catch(NumberFormatException e) {
-				throw new RuntimeException("Longs are not suppported by Qvx Writer");
+				LOGGER.error("Error writing qvx file: Longs are not suppported by Qvx Writer");
+				return;
 			}
 			
 			if (lowerBound < 0) {
@@ -439,11 +467,13 @@ public class QvxWriter {
 			fieldHeader.setType(QvxFieldType.QVX_TEXT);
 			fieldHeader.setByteWidth(BigInteger.valueOf(0));
 		}else {
-			throw new RuntimeException("Coding error in QvxWriter.java: Unrecognized KNIME type: " + type);
+			String errorMessage = "Coding error in QvxWriter.java: Unrecognized KNIME type: " + type;
+			LOGGER.error(errorMessage);
+			throw new RuntimeException(errorMessage);
 		}
 	}
 	
-	private byte[] stringToByteArray_zeroTerminated(QvxFieldHeader fieldHeader, String s) {
+	private byte[] stringToByteArrayZeroTerminated(QvxFieldHeader fieldHeader, String s) {
 		
 		/*Convert String to byte array, with a zero byte at the end of the array. The format of this
 		  array depending on the code page specified */
@@ -461,8 +491,12 @@ public class QvxWriter {
 			bytes[bytes.length-1] = (byte)0; //Zero-terminated byte
 			return bytes;
 		}else if (codePage == 1020 || codePage == 1021) { //UTF-16
-			throw new IllegalStateException("UTF-16 is not supported by Qvx Writer");
+			String errorMessage = "UTF-16 is not supported by Qvx Writer";
+			LOGGER.error(errorMessage);
+			throw new IllegalStateException(errorMessage);
 		}
-		throw new IllegalStateException("Code page " + codePage + " is not supported by Qvx Writer");
+		String errorMessage = "Code page " + codePage + " is not supported by Qvx Writer";
+		LOGGER.error(errorMessage);
+		throw new IllegalStateException(errorMessage);
 	}
 }

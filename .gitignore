@@ -1,6 +1,5 @@
 /.metadata/
 /.recommenders/
 /.sonarlint
-/eclipse-workspace/*
 /runtime-KNIME*/
 /test-files/*

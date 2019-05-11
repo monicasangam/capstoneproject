@@ -60,10 +60,10 @@ import static us.analytiq.knime.qvx.jaxb.QvxQvSpecialFlag.QVX_QV_SPECIAL_INT;
 import static us.analytiq.knime.qvx.jaxb.QvxQvSpecialFlag.QVX_QV_SPECIAL_INT_AND_STRING;
 import static us.analytiq.knime.qvx.jaxb.QvxQvSpecialFlag.QVX_QV_SPECIAL_NULL;
 import static us.analytiq.knime.qvx.jaxb.QvxQvSpecialFlag.QVX_QV_SPECIAL_STRING;
-import static us.analytiq.knime.qvx.reader.Util.getDateFromQvxReal;
-import static us.analytiq.knime.qvx.reader.Util.getDateFromString;
-import static us.analytiq.knime.qvx.reader.Util.getTimeFromString;
-import static us.analytiq.knime.qvx.reader.Util.objectToString;
+import static us.analytiq.knime.qvx.reader.QvxReaderUtil.getDateFromQvxReal;
+import static us.analytiq.knime.qvx.reader.QvxReaderUtil.getDateFromString;
+import static us.analytiq.knime.qvx.reader.QvxReaderUtil.getTimeFromString;
+import static us.analytiq.knime.qvx.reader.QvxReaderUtil.objectToString;
 
 public class QvxBinaryReader {
 

@@ -10,9 +10,9 @@ import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeLogger;
 
-public class Util {
+public class QvxReaderUtil {
 	
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(Util.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(QvxReaderUtil.class);
     
 	private static final long SECONDS_PER_DAY = 86400;
 	private static final long MILLISECONDS_PER_DAY = 86400000;
@@ -29,7 +29,7 @@ public class Util {
 		}
 	}
 	
-	private Util() {
+	private QvxReaderUtil() {
 		// Hides the implicit private constructor (squid:S1118)
 	}
 	

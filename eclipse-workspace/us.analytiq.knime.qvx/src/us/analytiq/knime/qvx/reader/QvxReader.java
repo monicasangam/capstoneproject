@@ -11,14 +11,14 @@ import org.knime.core.node.ExecutionContext;
 import us.analytiq.knime.qvx.jaxb.QvxTableHeader.Fields.QvxFieldHeader;
 import us.analytiq.knime.qvx.jaxb.QvxTableHeader;
 
-public class QVXReader {
+public class QvxReader {
 	private String filepath = null;
 	private QvxTableHeader qvxTableHeader = null;
 	private int numOfColumns;
 	private BufferedDataTable[] qvxTableData = null;
 	private QvxBinaryReader qvxBinaryReader = null;
 	
-	public QVXReader(String filepath, final ExecutionContext exec) throws JAXBException, IOException  {
+	public QvxReader(String filepath, final ExecutionContext exec) throws JAXBException, IOException  {
 		this.filepath = filepath;
 	    
 	    qvxBinaryReader = new QvxBinaryReader();

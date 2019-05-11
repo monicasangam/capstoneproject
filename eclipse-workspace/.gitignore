@@ -1,4 +1,4 @@
 /.metadata/
 /.recommenders/
 /.sonarlint
-/additional-test-files/
+/test-files/*

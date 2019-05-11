@@ -15,7 +15,7 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(QvxFileReaderNodeSettings.class);
 
-    private QVXReader qvxReader = null;
+    private QvxReader qvxReader = null;
     private QvxTableHeader qvxTableHeader =  null;
     
     private URL dataFileLocation = null;
@@ -90,11 +90,11 @@ public class QvxFileReaderNodeSettings extends TokenizerSettings {
         return dataFileLocation;
     }
 
-	public void setQvxReader(QVXReader qvxReader) {
+	public void setQvxReader(QvxReader qvxReader) {
 		this.qvxReader = qvxReader;		
 	}
 	
-	public QVXReader getQvxReader() {
+	public QvxReader getQvxReader() {
 		return this.qvxReader;		
 	}
 

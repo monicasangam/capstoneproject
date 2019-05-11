@@ -45,7 +45,7 @@ public class QvxReaderNodeModel extends NodeModel {
         URL url = FileUtil.toURL(filepath.getStringValue());
 
         settings.setDataFileLocationAndUpdateTableName(url);
-        settings.setQvxReader(new QVXReader(filepath.getStringValue(), exec));
+        settings.setQvxReader(new QvxReader(filepath.getStringValue(), exec));
         return settings.getQvxReader().getTableData();
     }
 

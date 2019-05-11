@@ -11,8 +11,8 @@ public enum QvxQvSpecialFlag {
 	
 	private final byte value;
 	
-	private QvxQvSpecialFlag(byte _value) {
-		value = _value;
+	private QvxQvSpecialFlag(byte theValue) {
+		value = theValue;
 	}
 	
 	public byte getValue() {

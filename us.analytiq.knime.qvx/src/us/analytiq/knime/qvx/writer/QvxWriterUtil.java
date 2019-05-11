@@ -56,7 +56,7 @@ public class QvxWriterUtil {
 		cal.set(Calendar.YEAR, year);
 		resolveDateOffset(cal);
 				
-		return (cal.getTimeInMillis() + epoch.getTime() - startDate.getTime())/(double)MILLISECONDS_PER_DAY;
+		return (cal.getTimeInMillis() + epoch.getTime() - startDate.getTime())/MILLISECONDS_PER_DAY;
 	}
 	
 	public static double timeToDaysSince(String time) {

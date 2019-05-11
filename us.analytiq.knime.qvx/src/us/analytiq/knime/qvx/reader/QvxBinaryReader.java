@@ -35,6 +35,7 @@ import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 
 import us.analytiq.knime.qvx.jaxb.FieldAttrType;
 import us.analytiq.knime.qvx.jaxb.FieldAttributes;
@@ -43,6 +44,7 @@ import us.analytiq.knime.qvx.jaxb.QvxFieldType;
 import us.analytiq.knime.qvx.jaxb.QvxNullRepresentation;
 import us.analytiq.knime.qvx.jaxb.QvxTableHeader;
 import us.analytiq.knime.qvx.jaxb.QvxTableHeader.Fields.QvxFieldHeader;
+import us.analytiq.knime.qvx.writer.QvxWriterNodeModel;
 
 import static us.analytiq.knime.qvx.jaxb.FieldAttrType.DATE;
 import static us.analytiq.knime.qvx.jaxb.FieldAttrType.FIX;
@@ -67,6 +69,8 @@ import static us.analytiq.knime.qvx.reader.QvxReaderUtil.objectToString;
 
 public class QvxBinaryReader {
 
+    public static final NodeLogger LOGGER = NodeLogger.getLogger(QvxBinaryReader.class);
+
 	private static final byte FS_BYTE = 0x1C;
 	private static final byte RS_BYTE = 0x1E;
 	private static final int WEB_STREAM_MAX_SIZE = 16384;
@@ -74,25 +78,22 @@ public class QvxBinaryReader {
 	private QvxTableHeader qvxTableHeader;
 	private List<QvxFieldHeader> fieldHeaders;
 	private String inFileName;
-	private InputStream inputStream;
 	private ExecutionContext exec;
 	private String[] fieldNames;
-	private String xmlString;
 	private byte[] buffer;
-	private int bufferSize;
 	private int bufferIndex = 0;
 	private int zeroByteIndex;
 	private List<Object[]> data = new ArrayList<>();
 	
 	/*For each field, this value is true if it should be stored in KNIME as a date,
 	  false if it should be stored as time or some other format, and null if neither date nor time */
-	private Boolean fieldUsesDate[];
+	private Boolean[] fieldUsesDate;
 	
 	QvxBinaryReader(){
 		
 	}
 	
-	BufferedDataTable[] readQvx(String inFileName, ExecutionContext exec) {
+	BufferedDataTable[] readQvx(String inFileName, ExecutionContext exec) throws IOException {
 		
 		this.inFileName = inFileName;
 		this.exec = exec;
@@ -219,7 +220,7 @@ public class QvxBinaryReader {
 			}
 			
 			//Get the type of dataPt and create the appropriate cell type
-			Class dataClass = dataPt.getClass();
+			Class<?> dataClass = dataPt.getClass();
 			if(dataClass.equals(java.lang.Double.class) || usesFixedPointDecimals(fieldHeaders.get(i))) {
 				dataTypes[i] = isIntegerColumn(i) ? IntCell.TYPE : DoubleCell.TYPE;
 			}else if (usesFixedPointDecimals(fieldHeaders.get(i))) {
@@ -308,97 +309,116 @@ public class QvxBinaryReader {
 		return true;
 	}
 	
-	private void readQvxTableHeader() {
+	private void readQvxTableHeader() throws IOException {
 		
 		/* Reads the entire "inFileName", creates QvxTableHeader object, and stores the location of the
 		 * zero-byte
 		 */
 		
-		// Read the entire "inFileName" into a buffer, from either the local file system or internet
-		inputStream = null;
+		readInputStreamIntoBuffer();
+		
+		// Extract the xml portion of buffer
+		zeroByteIndex = indexOf(buffer, (byte)0);
+		String xmlString = byteArrayToString(Arrays.copyOfRange(buffer, 0, zeroByteIndex));
+		
+		// Unmarshal "xmlString" into a QvxTableHeader object
 		try {
-			
-			try { //Try attempting to read file from local file system
-				inputStream = new FileInputStream(inFileName);
-				
-				//Set bufferSize
-				File f = new File(inFileName);
-				bufferSize = (int)f.length();
-				if (bufferSize < f.length()) {
-					// If bufferSize is not appropriate; theoretically, should never happen
-					inputStream.close();
-					throw new RuntimeException("Expected file size does not match actual size");
-				}
-				
-				//Read "inFileName" into "buffer"
-				buffer = new byte[bufferSize];
-				int bytesRead = inputStream.read(buffer);
-				if (bytesRead != bufferSize || inputStream.read() != -1) {
-					// If bufferSize is not appropriate; theoretically, should never happen
-					inputStream.close();
-					throw new RuntimeException("Expected file size does not match actual size");
-				}
-			}catch(FileNotFoundException e) {
-				//Try finding the file on the internet
-				try{
-					if (inFileName.startsWith("http")) {
-						inputStream = new BufferedInputStream(new URL(inFileName).openStream());
-						
-						/*Keep reading bytes from inputStream until the inputStream ends; store these bytes
-						in "bytes", then add every item in bytes to a large "buffer" array. This simulates
-						the act of reading the entire file into one buffer with a single read statement.*/
-						
-						List<byte[]> bytes = new ArrayList<byte[]>();
-						int totalLength = 0;
-						int numRead = 0;
-						int previousRead = 0;
-						byte[] currBuffer = new byte[WEB_STREAM_MAX_SIZE];
-						while ((numRead = inputStream.read(currBuffer)) != -1) {
-							previousRead = numRead;
-							bytes.add(currBuffer.clone());
-							totalLength += numRead;
-						}
-						bytes.set(bytes.size()-1, Arrays.copyOfRange(
-							bytes.get(bytes.size()-1), 0, previousRead));		
-						bufferSize = totalLength;
-						buffer = new byte[totalLength];
-						
-						int idx = 0;
-						for(int i = 0; i < bytes.size(); i++) {
-							currBuffer = bytes.get(i);
-							for (int j = 0; j < currBuffer.length; j++) {
-								buffer[idx++] = currBuffer[j];
-							}
-						}						
-					}else {
-						throw new FileNotFoundException("File not found: " + inFileName);
-					}
-				}catch(FileNotFoundException e2) {
-					throw new FileNotFoundException("File not found: " + inFileName);
-				}
-			}
-			
-			// Extract the xml portion of buffer
-			zeroByteIndex = indexOf(buffer, (byte)0);
-			xmlString = byteArrayToString(Arrays.copyOfRange(buffer, 0, zeroByteIndex));
-			
-			// Unmarshal "xmlString" into a QvxTableHeader object
 			JAXBContext jaxbContext;
 			jaxbContext = JAXBContext.newInstance( QvxTableHeader.class );
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 			qvxTableHeader = (QvxTableHeader) jaxbUnmarshaller.unmarshal(
 					new StreamSource(new StringReader(xmlString)));
+		}catch(JAXBException e) {
+			LOGGER.error("Error reading qvx file; QvxTableHeader is invalid");
+		}
+		
+		//Add field names to "data"
+		fieldHeaders = qvxTableHeader.getFields().getQvxFieldHeader();
+		fieldNames = new String[fieldHeaders.size()];
+		for(int i = 0; i < fieldHeaders.size(); i++) {
+			fieldNames[i] = fieldHeaders.get(i).getFieldName();
+		}	
+	}
+	
+	private void readInputStreamIntoBuffer() throws IOException {
+		
+		// Read the entire "inFileName" into a buffer, from either the local file system or Internet
+		
+		InputStream inputStream = null;
+		if (new File(inFileName).exists()) {
 			
-			//Add field names to "data"
-			fieldHeaders = qvxTableHeader.getFields().getQvxFieldHeader();
-			fieldNames = new String[fieldHeaders.size()];
-			for(int i = 0; i < fieldHeaders.size(); i++) {
-				fieldNames[i] = fieldHeaders.get(i).getFieldName();
-			}	
+			inputStream = new FileInputStream(inFileName);
+			
+			//Set bufferSize
+			File f = new File(inFileName);
+			int bufferSize = (int)f.length();
+			
+			//Read "inFileName" into "buffer"
+			buffer = new byte[bufferSize];
+			try {
+				int bytesRead = inputStream.read(buffer);
+				if (bytesRead != buffer.length) {
+					String errorMessage = "Number of bytes read does match buffer size";
+					LOGGER.error(errorMessage);
+					throw new IllegalStateException(errorMessage);
+				}
+			}catch(IOException e) {
+				String errorMessage = "Error reading from buffer";
+				LOGGER.error(errorMessage);
+				throw new RuntimeException(errorMessage);
+			}finally {
+				inputStream.close();
+			}
+		}else if (inFileName.startsWith("http")){ //Try finding the file on the Internet
+			
+			try{
+				if (inFileName.startsWith("http")) {
+					inputStream = new BufferedInputStream(new URL(inFileName).openStream());
+					
+					/*Keep reading bytes from inputStream until the inputStream ends; store these bytes
+					in "bytes", then add every item in bytes to a large "buffer" array. This simulates
+					the act of reading the entire file into one buffer with a single read statement.*/
+					
+					List<byte[]> bytes = new ArrayList<>();
+					int totalLength = 0;
+					int numRead = 0;
+					int previousRead = 0;
+					byte[] currBuffer = new byte[WEB_STREAM_MAX_SIZE];
+					while ((numRead = inputStream.read(currBuffer)) != -1) {
+						previousRead = numRead;
+						bytes.add(currBuffer.clone());
+						totalLength += numRead;
+					}
+					bytes.set(bytes.size()-1, Arrays.copyOfRange(
+						bytes.get(bytes.size()-1), 0, previousRead));		
+					buffer = new byte[totalLength];
+					
+					int idx = 0;
+					for(int i = 0; i < bytes.size(); i++) {
+						currBuffer = bytes.get(i);
+						for (int j = 0; j < currBuffer.length; j++) {
+							buffer[idx++] = currBuffer[j];
+						}
+					}						
+				}else {
+					String errorMessage = "File not found: " + inFileName;
+					LOGGER.error(errorMessage);
+					throw new FileNotFoundException(errorMessage);
+				}
+			}catch(FileNotFoundException e2) {
+				String errorMessage = "File not found: " + inFileName;
+				LOGGER.error(errorMessage);
+				throw new FileNotFoundException(errorMessage);
+			}finally {
+				if (inputStream != null) {
+					inputStream.close();
+				}
+			}
+		}
+		
+		if (inputStream != null) {
 			inputStream.close();
 		}
-		catch(IOException e) { e.printStackTrace(); }
-		catch(JAXBException e) { e.printStackTrace(); }
 	}
 	
 	private void readBody() {
@@ -420,7 +440,7 @@ public class QvxBinaryReader {
 			//Check for record separator byte if required
 			if (usesSeparatorByte) {
 				if (readBytesFromBuffer(1)[0] != RS_BYTE) {
-					throw new RuntimeException("Record separator byte is expected");
+					throw new IllegalStateException("Record separator byte is expected");
 				}
 			}
 			
@@ -439,7 +459,7 @@ public class QvxBinaryReader {
 						}else if (nullFlag == 1) { //Null flag of 1 means a field value is not used
 							row[i] = null;
 						}else {
-							throw new RuntimeException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
+							throw new IllegalStateException("Unrecognized QVX_NULL_FLAG_SUPPRESS_DATA flag: " +
 									nullFlag);
 						}
 						break;
@@ -459,7 +479,7 @@ public class QvxBinaryReader {
 		//Check for file separator byte if required
 		if (usesSeparatorByte) {
 			if (readBytesFromBuffer(1)[0] != FS_BYTE) {
-				throw new RuntimeException("File separator byte is expected");
+				throw new IllegalStateException("File separator byte is expected");
 			}
 		}
 	}
@@ -481,6 +501,7 @@ public class QvxBinaryReader {
 					Double d = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getDouble();
 					return applyFieldAttr(d, fieldHeader);
 				}
+				return null;
 			case QVX_PACKED_BCD:
 				throw new RuntimeException(	
 					"Problem with input file: Qvx Reader does not support QvxFieldType: QVX_PACKED_BCD");
@@ -496,13 +517,14 @@ public class QvxBinaryReader {
 					long l = ByteBuffer.wrap(readBytesFromBuffer(8)).order(byteOrder).getLong();
 					return (long)applyFieldAttr(l, fieldHeader);
 				}
+				return null;
 			case QVX_TEXT:
 				return bufferToString_zeroTerminated();
 			case QVX_QV_DUAL:
 				if(fieldHeader.getExtent() == QvxFieldExtent.QVX_QV_SPECIAL) {
 					return readQvDualBytes(fieldHeader);
 				}else {
-					throw new RuntimeException("Fields of type QVX_QV_DUAL must use field extent" +
+					throw new IllegalStateException("Fields of type QVX_QV_DUAL must use field extent" +
 							"QVX_QV_SPECIAL");
 				}
 			default:
@@ -644,12 +666,14 @@ public class QvxBinaryReader {
 							return null;
 						}
 					}catch(Exception e) {
-						e.printStackTrace();
+						String errorMessage = "Error reading qvx file";
+						LOGGER.error(errorMessage);
+						throw new RuntimeException(errorMessage);
 					}
 					
 					return cal;
 				}else {
-					System.out.println("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
+					LOGGER.warn("WARNING: Unimplemented QvxFieldType-FieldAttrType combination: " +
 							type + ", " + fieldAttrType + "; This field will not be stored as a " +
 							fieldAttrType);
 					return data;

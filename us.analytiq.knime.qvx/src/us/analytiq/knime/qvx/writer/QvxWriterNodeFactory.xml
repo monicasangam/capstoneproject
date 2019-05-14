@@ -3,16 +3,19 @@
     <name>QVX Writer</name>
     
     <shortDescription>
-        Reads a data table from the input port and produces a Qvx file.
+        Reads a data table from the input port and produces a qvx file.
     </shortDescription>
     
     <fullDescription>
         <intro>
         	<p>
-        	Writes Qvx files. Upon executing, the node will read the data table on the in-port. The node
-        	will write the appropriate table header information header information for the Qvx file,
-        	and then write the data portion of the Qvx file based on the data table.
-		  	</p>
+        	Writes qvx files. Upon executing, the node will read the data table on the in-port. The node
+        	will write the appropriate table header information header information for the qvx file,
+        	and then write the data portion of the qvx file based on the data table.<br /><br />
+        	
+			This node is contained in <i>Qlik Connectivity node for KNIME</i> provided by
+		  	<i>AnalytiQ, Princeton, NJ.</i>
+			</p>
         </intro>
         
         <tab name="Settings">
@@ -23,7 +26,7 @@
         	</option>
         	
         	<option name="Table name">
-        	Table name of the Qvx file.
+        	Table name of the qvx file.
         	</option>
         	
         	<option name="If file exists...">
@@ -36,11 +39,11 @@
     	
     		<option name="Column Name">
     		Name of the column of the input data table, which will also be the name of the corresponding
-    		column in the Qvx file.
+    		column in the qvx file.
     		</option>
     		
     		<option name="Field Attribute">
-    		Specifies how QlikView should interpret the data values in the Qvx file.
+    		Specifies how QlikView should interpret the data values in the qvx file.
     		</option>
     		
     		<option name="# Decimals">
@@ -56,20 +59,20 @@
     		</option>
     		
     		<option name="Endianness">
-    		Specifies the byte-order of the numerical data values within the Qvx file.
+    		Specifies the byte-order of the numerical data values within the qvx file.
     		</option>
     	</tab>
 	</fullDescription>
        
 	<ports>
 		<inPort index="0" name="Data Table">
-		Data table that will be used to generate the Qvx file.
+		Data table that will be used to generate the qvx file.
 		</inPort>
 	</ports>
 	
 	<views>
 		<view index = "0" name = "Settings">
-		Choose where the Qvx file will be saved and set whether or not an existing Qvx file should be
+		Choose where the qvx file will be saved and set whether or not an existing qvx file should be
 		overwritten.
 		</view>
 		
@@ -79,9 +82,8 @@
 		</view>
 		
 		<view index = "2" name = "Settings">
-		Toggle settings that affect the structure of the data in the output Qvx file. These settings
-		have no effect on the actual data values that are stored in the Qvx file.
+		Toggle settings that affect the structure of the data in the output qvx file. These settings
+		have no effect on the actual data values that are stored in the qvx file.
 		</view>
-	</views>
-	
+	</views>	
 </knimeNode>

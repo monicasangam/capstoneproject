@@ -1,7 +1,7 @@
                     GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
- Copyright (C) Monica Sangam and Matthew Belanger from New Jersey Institute of Technology,
+ Copyright (C) 2019-2030 Monica Sangam and Matthew Belanger from New Jersey Institute of Technology,
  New Jersey Institute of Technology, Newark, NJ 07102 USA
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.

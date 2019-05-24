@@ -12,9 +12,6 @@
         	Writes qvx files. Upon executing, the node will read the data table on the in-port. The node
         	will write the appropriate table header information header information for the qvx file,
         	and then write the data portion of the qvx file based on the data table.<br /><br />
-        	
-			This node is contained in <i>Qlik Connectivity node for KNIME</i> provided by
-		  	<i>AnalytiQ, Princeton, NJ.</i>
 			</p>
         </intro>
         

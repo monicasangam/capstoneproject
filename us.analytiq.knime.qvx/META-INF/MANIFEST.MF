@@ -1,11 +1,12 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: QvxReader-Node extension for KNIME Workbench
+Bundle-Name: Qlik Connectivity for KNIME
 Bundle-SymbolicName: us.analytiq.knime.qvx.reader; singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: qvxreader.jar
 Bundle-Activator: us.analytiq.knime.qvx.reader.QvxReaderNodePlugin
 Bundle-Vendor: 
+ Analytiq, Princeton, NJ
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
  org.knime.workbench.repository,

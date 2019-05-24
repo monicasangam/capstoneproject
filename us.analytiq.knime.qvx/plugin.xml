@@ -2,8 +2,18 @@
 <?eclipse version="3.0"?><plugin>
    
  	<extension point="org.knime.workbench.repository.nodes">
-		<node category-path="/community" factory-class="us.analytiq.knime.qvx.reader.QvxReaderNodeFactory" id="us.analytiq.knime.qvx.reader.QvxReaderNodeFactory"/>
-		<node category-path="/community" factory-class="us.analytiq.knime.qvx.writer.QvxWriterNodeFactory" id="us.analytiq.knime.qvx.writer.QvxWriterNodeFactory"/>
+		<node category-path="/community/qlik" factory-class="us.analytiq.knime.qvx.reader.QvxReaderNodeFactory" id="us.analytiq.knime.qvx.reader.QvxReaderNodeFactory"/>
+		<node category-path="/community/qlik" factory-class="us.analytiq.knime.qvx.writer.QvxWriterNodeFactory" id="us.analytiq.knime.qvx.writer.QvxWriterNodeFactory"/>
+	</extension>
+  	
+  	<extension point="org.knime.workbench.repository.categories">
+		<category
+           icon="icons/Qlik Connectivity.png"
+           level-id="qlik"
+           locked="true"
+           name="Qlik Connectivity"
+           path="/community">
+		</category>
 	</extension>
    
 </plugin>

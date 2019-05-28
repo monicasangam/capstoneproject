@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="us.anaytiq.knime.qvx.feature"
-      label="Feature"
-      version="1.0.0.qualifier">
+      id="us.analytiq.knime.qvx.feature"
+      label="Qvx"
+      version="1.0.0.qualifier"
+      provider-name="Matthew Belanger and Monica Sangam">
 
    <description url="http://www.example.com/description">
       Qvx Reader and Qvx Writer nodes for KNIME
    </description>
 
    <copyright url="http://www.example.com/copyright">
-      Copyright (C) 2019-2030 Monica Sangam and Matthew Belanger ; New Jersey Institute of Technology, Newark, NJ, United States
+      Copyright (C) 2019-2030 Monica Sangam and Matthew Belanger; New Jersey Institute of Technology, Newark, NJ, United States
    </copyright>
 
-   <license url="">
-      GNU GENERAL PUBLIC LICENSE
+   <license url="http://www.example.com/license">
+	  GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. &lt;https://fsf.org/&gt;
@@ -688,9 +689,9 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;https://www.gnu.org/licenses/why-not-lgpl.html&gt;.
    </license>
-   
+
    <plugin
-         id="us.analytiq.knime.qvx_1.0.0.jar"
+         id="us.analytiq.knime.qvx.reader"
          download-size="0"
          install-size="0"
          version="0.0.0"/>
